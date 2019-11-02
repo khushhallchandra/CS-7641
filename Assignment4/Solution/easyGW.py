@@ -191,38 +191,39 @@ if __name__ == '__main__':
 	increment = MAX_ITERATIONS/NUM_INTERVALS
 	iterations = range(1,MAX_ITERATIONS+1)
 	for lr in [0.1,0.9]:
-		for qInit in [-100,0,100]:
+		for qInit in [0]:
 			for epsilon in [0.1,0.3,0.4]:
-				last10Chg = deque([99]*10,maxlen=10)
-				Qname = 'Q-Learning L{:0.1f} q{:0.1f} E{:0.1f}'.format(lr,qInit,epsilon)
-				agent = QLearning(domain,discount,hashingFactory,qInit,lr,epsilon,300)
-				#agent.setLearningRateFunction(SoftTimeInverseDecayLR(1.,0.))
-				agent.setDebugCode(0)
-				print "//{} {} Iteration Analysis//".format(world,Qname)           
-				for nIter in iterations: 
-					if nIter % 50 == 0: print(nIter)			
-					startTime = clock()    
-					ea = agent.runLearningEpisode(env,300)   
-					if len(timing[Qname])> 0:
-						timing[Qname].append(timing[Qname][-1]+clock()-startTime)   
-					else:
-						timing[Qname].append(clock()-startTime)             
-					env.resetEnvironment()
-					agent.initializeForPlanning(rf, tf, 1)
-					p = agent.planFromState(initialState)     # run planning from our initial state                
-					last10Chg.append(agent.maxQChangeInLastEpisode)
-					convergence[Qname].append(sum(last10Chg)/10.)          
-					# evaluate the policy with one roll out visualize the trajectory
-					runEvals(initialState,p,rewards[Qname],steps[Qname])                    
-					if nIter == 5 :
-						simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learner {}".format(nIter))
-						# simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learning {}".format(nIter))
-						dumpPolicyMap(MapPrinter.printPolicyMap(allStates, p, gen.getMap()),'QL {} {} Iter {} Policy Map.pkl'.format(Qname,world,nIter))
-						time.sleep(10)
-					if convergence[Qname][-1] <0.5 or nIter==MAX_ITERATIONS:
-						simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learner {}".format(nIter))
-						# simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learning {}".format(nIter))
-						dumpPolicyMap(MapPrinter.printPolicyMap(allStates, p, gen.getMap()),'QL {} {} Iter {} Policy Map.pkl'.format(Qname,world,nIter));break
-				print "\n\n\n"
-				dumpCSV(nIter, timing[Qname], rewards[Qname], steps[Qname],convergence[Qname], world, Qname)
-	 
+				for discount in [0.99, 0.9, 0.8]:
+					last10Chg = deque([99]*10,maxlen=10)
+					Qname = 'Q-Learning L{:0.1f} q{:0.1f} E{:0.1f} D{:0.2f}'.format(lr,qInit,epsilon, discount)
+					agent = QLearning(domain,discount,hashingFactory,qInit,lr,epsilon,300)
+					#agent.setLearningRateFunction(SoftTimeInverseDecayLR(1.,0.))
+					agent.setDebugCode(0)
+					print "//{} {} Iteration Analysis//".format(world,Qname)           
+					for nIter in iterations: 
+						if nIter % 50 == 0: print(nIter)			
+						startTime = clock()    
+						ea = agent.runLearningEpisode(env,300)   
+						if len(timing[Qname])> 0:
+							timing[Qname].append(timing[Qname][-1]+clock()-startTime)   
+						else:
+							timing[Qname].append(clock()-startTime)             
+						env.resetEnvironment()
+						agent.initializeForPlanning(rf, tf, 1)
+						p = agent.planFromState(initialState)     # run planning from our initial state                
+						last10Chg.append(agent.maxQChangeInLastEpisode)
+						convergence[Qname].append(sum(last10Chg)/10.)          
+						# evaluate the policy with one roll out visualize the trajectory
+						runEvals(initialState,p,rewards[Qname],steps[Qname])                    
+						if nIter == 5 :
+							# simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learner {}".format(nIter))
+							# simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learning {}".format(nIter))
+							dumpPolicyMap(MapPrinter.printPolicyMap(allStates, p, gen.getMap()),'QL {} {} Iter {} Policy Map.pkl'.format(Qname,world,nIter))
+							time.sleep(10)
+						if convergence[Qname][-1] <0.5 or nIter==MAX_ITERATIONS:
+							# simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learner {}".format(nIter))
+							# simpleValueFunctionVis(agent, p, initialState, domain, hashingFactory, "Q-Learning {}".format(nIter))
+							dumpPolicyMap(MapPrinter.printPolicyMap(allStates, p, gen.getMap()),'QL {} {} Iter {} Policy Map.pkl'.format(Qname,world,nIter));break
+					print "\n\n\n"
+					dumpCSV(nIter, timing[Qname], rewards[Qname], steps[Qname],convergence[Qname], world, Qname)
+		 
